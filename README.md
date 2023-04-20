@@ -43,7 +43,7 @@ yarn serve
 ### 自定义素材
 可自定义字体、设计模板、标题模板等，所有自定义素材在https://github.com/nihaojob/vue-fabric-editor-static 项目中保存。
 
-相关二次开发问题欢迎加入星球咨询：
+我们通过有偿的方式积累高质量的常见问题、最佳实践文档，欢迎加入星球：
 
 <img src="https://user-images.githubusercontent.com/13534626/231202037-18fe913f-81ab-4cd6-aa87-ada471e27586.png" width="50%" >
 
@@ -158,13 +158,20 @@ yarn serve
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/liucity">
+            <img src="https://avatars.githubusercontent.com/u/12006542?v=4" width="80;" alt="liucity"/>
+            <br />
+            <sub><b>liucity</b></sub>
+        </a>
+    </td></tr>
+<tr>
+    <td align="center">
         <a href="https://github.com/icleitoncosta">
             <img src="https://avatars.githubusercontent.com/u/3260480?v=4" width="80;" alt="icleitoncosta"/>
             <br />
             <sub><b>icleitoncosta</b></sub>
         </a>
-    </td></tr>
-<tr>
+    </td>
     <td align="center">
         <a href="https://github.com/macheteHot">
             <img src="https://avatars.githubusercontent.com/u/26652329?v=4" width="80;" alt="macheteHot"/>
@@ -199,15 +206,15 @@ yarn serve
             <br />
             <sub><b>xiaozeo</b></sub>
         </a>
-    </td>
+    </td></tr>
+<tr>
     <td align="center">
         <a href="https://github.com/luke358">
             <img src="https://avatars.githubusercontent.com/u/48149577?v=4" width="80;" alt="luke358"/>
             <br />
             <sub><b>luke358</b></sub>
         </a>
-    </td></tr>
-<tr>
+    </td>
     <td align="center">
         <a href="https://github.com/yehan68">
             <img src="https://avatars.githubusercontent.com/u/40497166?v=4" width="80;" alt="yehan68"/>
