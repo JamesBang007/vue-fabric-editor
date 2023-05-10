@@ -7,7 +7,7 @@
         <div class="flex-item">
           <div class="left font-selector">
             <Select v-model="fontAttr.fontFamily" @on-change="changeFontFamily">
-              <Option v-for="item in fontFamilyList" :value="item.name" :key="'font-' + item.name">
+              <Option v-for="item in fontFamilyList" :value="item.name" :key="`font-${item.name}`">
                 <div class="font-item" :style="`background-image:url('${item.preview}');`">
                   {{ !item.preview ? item : '' }}
                 </div>
@@ -202,7 +202,7 @@
                 <Option
                   v-for="item in strokeDashList"
                   :value="item.label"
-                  :key="'stroke-' + item.label"
+                  :key="`stroke-${item.label}`"
                 >
                   {{ item.label }}
                 </Option>
@@ -509,11 +509,11 @@ export default {
         });
     },
     getFreeFontList() {
-      axios.get(repoSrc + '/font/free-font.json').then((res) => {
-        this.fontFamilyList = [
+      axios.get(`${repoSrc}/font/free-font.json`).then((res) => {
+        this.fontFamilyList = {
           ...this.fontFamilyList,
           ...Object.entries(res.data).map(([, value]) => value),
-        ];
+        };
       });
     },
     // 通用属性改变
@@ -540,7 +540,6 @@ export default {
     // 边框设置
     borderSet(key) {
       const activeObject = this.canvas.c.getActiveObjects()[0];
-      console.log(key, activeObject);
       if (activeObject) {
         const stroke = this.strokeDashList.find((item) => item.label === key);
         activeObject.set(stroke.value);

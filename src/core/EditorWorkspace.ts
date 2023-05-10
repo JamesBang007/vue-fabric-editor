@@ -154,7 +154,7 @@ class EditorWorkspace {
     let zoomRatio = this.canvas.getZoom();
     zoomRatio -= 0.05;
     const center = this.canvas.getCenter();
-    this.canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoomRatio);
+    this.canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoomRatio < 0 ? 0.01 : zoomRatio);
   }
 
   // 自动缩放
@@ -184,7 +184,7 @@ class EditorWorkspace {
     const This = this;
     this.canvas.on('mouse:down', function (this: ExtCanvas, opt) {
       const evt = opt.e;
-      if (evt.altKey === true || This.dragMode) {
+      if (evt.altKey || This.dragMode) {
         This.canvas.defaultCursor = 'grabbing';
         This.canvas.discardActiveObject();
         This._setDring();

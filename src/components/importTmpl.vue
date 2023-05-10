@@ -2,7 +2,7 @@
  * @Author: 秦少卫
  * @Date: 2022-09-03 19:16:55
  * @LastEditors: 秦少卫
- * @LastEditTime: 2023-04-11 23:31:30
+ * @LastEditTime: 2023-04-27 23:07:22
  * @Description: 导入模板
 -->
 
@@ -12,7 +12,7 @@
     <Tooltip
       :content="item.label"
       v-for="(item, i) in list"
-      :key="i + '-bai1-button'"
+      :key="`${i}-bai1-button`"
       placement="top"
     >
       <img
@@ -39,18 +39,18 @@ export default {
       list: [
         {
           label: '海报模板',
-          tempUrl: repoSrc + 'template/49234261-0187-4fdc-be80-f9dfb14c8bc6.json',
-          src: repoSrc + 'template/49234261-0187-4fdc-be80-f9dfb14c8bc6.png',
+          tempUrl: `${repoSrc}template/49234261-0187-4fdc-be80-f9dfb14c8bc6.json`,
+          src: `${repoSrc}template/49234261-0187-4fdc-be80-f9dfb14c8bc6.png`,
         },
         {
           label: '旅游海报',
-          tempUrl: repoSrc + 'template/6ff9093a-4976-416b-8285-db5496842487.json',
-          src: repoSrc + 'template/6ff9093a-4976-416b-8285-db5496842487.png',
+          tempUrl: `${repoSrc}template/6ff9093a-4976-416b-8285-db5496842487.json`,
+          src: `${repoSrc}template/6ff9093a-4976-416b-8285-db5496842487.png`,
         },
         {
           label: '邀请海报',
-          tempUrl: repoSrc + 'template/b40fee28-de9f-4304-a07e-2f55d36f137e.json',
-          src: repoSrc + 'template/b40fee28-de9f-4304-a07e-2f55d36f137e.png',
+          tempUrl: `${repoSrc}template/b40fee28-de9f-4304-a07e-2f55d36f137e.json`,
+          src: `${repoSrc}template/b40fee28-de9f-4304-a07e-2f55d36f137e.png`,
         },
       ],
     };
@@ -91,10 +91,9 @@ export default {
       this.$Spin.show({
         render: (h) => h('div', this.$t('alert.loading_data')),
       });
-      const getTemp = axios.get(repoSrc + 'template/index.json');
+      const getTemp = axios.get(`${repoSrc}template/index.json`);
       getTemp
         .then((res) => {
-          console.log(res, '111');
           this.list = res.data.data.map((item) => {
             item.tempUrl = repoSrc + item.tempUrl;
             item.src = repoSrc + item.src;
