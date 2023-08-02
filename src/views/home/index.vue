@@ -1,6 +1,7 @@
 <template>
   <div class="home">
     <Layout>
+      <!-- 头部区域 -->
       <Header v-if="state.show">
         <!-- logo -->
         <span class="logo">
@@ -16,7 +17,12 @@
         <Divider type="vertical" />
         <!-- 标尺开关 -->
         <Tooltip :content="$t('grid')">
-          <iSwitch v-model="state.ruler" size="small" class="switch"></iSwitch>
+          <iSwitch
+            v-model="state.ruler"
+            @on-change="rulerSwitch"
+            size="small"
+            class="switch"
+          ></iSwitch>
         </Tooltip>
         <Divider type="vertical" />
         <history></history>
@@ -29,13 +35,9 @@
         </div>
       </Header>
       <Content style="display: flex; height: calc(100vh - 64px)">
-        <div v-if="state.show" style="width: 380px; height: 100%; background: #fff; display: flex">
-          <Menu
-            :active-name="state.menuActive"
-            accordion
-            @on-select="(activeIndex) => (state.menuActive = activeIndex)"
-            width="65px"
-          >
+        <!-- 左侧区域 -->
+        <div v-if="state.show" :class="`left-bar ${state.toolsBarShow && 'show-tools-bar'}`">
+          <Menu :active-name="state.menuActive" accordion @on-select="showToolsBar" width="65px">
             <MenuItem :name="1" class="menu-item">
               <Icon type="md-book" size="24" />
               <div>{{ $t('templates') }}</div>
@@ -49,7 +51,8 @@
               <div>{{ $t('layers') }}</div>
             </MenuItem>
           </Menu>
-          <div class="content">
+
+          <div class="content" v-show="state.toolsBarShow">
             <!-- 生成模板 -->
             <div v-show="state.menuActive === 1" class="left-panel">
               <import-tmpl></import-tmpl>
@@ -65,19 +68,25 @@
               <layer></layer>
             </div>
           </div>
+
+          <!-- 关闭按钮 -->
+          <div class="close-btn" v-show="state.toolsBarShow" @click="hideToolsBar"></div>
         </div>
+
         <!-- 画布区域 -->
-        <div id="workspace" style="width: 100%; position: relative; background: #f1f1f1">
+        <div id="workspace">
           <div class="canvas-box">
             <div class="inside-shadow"></div>
             <canvas id="canvas" :class="state.ruler ? 'design-stage-grid' : ''"></canvas>
-            <dragMode></dragMode>
+            <dragMode v-if="state.show"></dragMode>
             <zoom></zoom>
-            <mouseMenu></mouseMenu>
+            <!-- <mouseMenu></mouseMenu> -->
           </div>
         </div>
+
         <!-- 属性区域 380-->
-        <div style="width: 530px; height: 100%; padding: 10px; overflow-y: auto; background: #fff">
+        <!-- <transition name="move-right"> -->
+        <div class="right-bar" v-show="state.attrBarShow">
           <div v-if="state.show" style="padding-top: 10px">
             <!-- 新增字体样式使用 -->
             <!-- <Button @click="getFontJson" size="small">获取字体数据</Button> -->
@@ -100,6 +109,12 @@
           </div>
           <attribute v-if="state.show"></attribute>
         </div>
+        <!-- </transition> -->
+        <!-- 右侧关闭按钮 -->
+        <div
+          :class="`close-btn right-btn ${state.attrBarShow && 'right-btn-open'}`"
+          @click="switchAttrBar"
+        ></div>
       </Content>
     </Layout>
   </div>
@@ -139,52 +154,79 @@ import history from '@/components/history.vue';
 import layer from '@/components/layer.vue';
 import attribute from '@/components/attribute.vue';
 
-// 右键菜单
-import mouseMenu from '@/components/contextMenu/index.vue';
-
 // 功能组件
-import CanvasEventEmitter from '@/utils/event/notifier';
+import { CanvasEventEmitter } from '@/utils/event/notifier';
 // import { downFile } from '@/utils/utils';
 import { fabric } from 'fabric';
-import Editor from '@/core';
+import Editor, {
+  DringPlugin,
+  AlignGuidLinePlugin,
+  ControlsPlugin,
+  ControlsRotatePlugin,
+  CenterAlignPlugin,
+  LayerPlugin,
+  CopyPlugin,
+  MoveHotKeyPlugin,
+  DeleteHotKeyPlugin,
+  GroupPlugin,
+  DrawLinePlugin,
+  GroupTextEditorPlugin,
+  GroupAlignPlugin,
+  WorkspacePlugin,
+  DownFontPlugin,
+  HistoryPlugin,
+  FlipPlugin,
+  RulerPlugin,
+} from '@/core';
+
+// 创建编辑器
+const canvasEditor = new Editor();
 
 const event = new CanvasEventEmitter();
-const canvas = {};
+// const canvas = {};
 
 const state = reactive({
   menuActive: 1,
   show: false,
+  toolsBarShow: true,
+  attrBarShow: true,
   select: null,
   ruler: false,
 });
 
 onMounted(() => {
-  const _canvas = new fabric.Canvas('canvas', {
+  // 初始化fabric
+  const canvas = new fabric.Canvas('canvas', {
     fireRightClick: true, // 启用右键，button的数字为3
     stopContextMenu: true, // 禁止默认右键菜单
     controlsAboveOverlay: true, // 超出clipPath后仍然展示控制条
   });
 
-  canvas.c = _canvas;
-  event.init(canvas.c);
-  canvas.editor = new Editor(canvas.c);
+  // 初始化编辑器
+  canvasEditor.init(canvas);
+  canvasEditor.use(DringPlugin);
+  canvasEditor.use(AlignGuidLinePlugin);
+  canvasEditor.use(ControlsPlugin);
+  canvasEditor.use(ControlsRotatePlugin);
+  canvasEditor.use(CenterAlignPlugin);
+  canvasEditor.use(LayerPlugin);
+  canvasEditor.use(CopyPlugin);
+  canvasEditor.use(MoveHotKeyPlugin);
+  canvasEditor.use(DeleteHotKeyPlugin);
+  canvasEditor.use(GroupPlugin);
+  canvasEditor.use(DrawLinePlugin);
+  canvasEditor.use(GroupTextEditorPlugin);
+  canvasEditor.use(GroupAlignPlugin);
+  canvasEditor.use(WorkspacePlugin);
+  canvasEditor.use(DownFontPlugin);
+  canvasEditor.use(HistoryPlugin);
+  canvasEditor.use(FlipPlugin);
+  canvasEditor.use(RulerPlugin);
 
-  canvas.c.renderAll();
-
+  event.init(canvas);
   state.show = true;
 });
 
-watch(
-  () => state.ruler,
-  (value) => {
-    if (!canvas.c.ruler) return;
-    if (value) {
-      canvas.c.ruler.enable();
-    } else {
-      canvas.c.ruler.disable();
-    }
-  }
-);
 // 获取字体数据 新增字体样式使用
 // getFontJson() {
 //   const activeObject = this.canvas.getActiveObject();
@@ -199,9 +241,33 @@ watch(
 //     downFile(dataUrl, 'font.png');
 //   }
 // },
+
+const rulerSwitch = (val) => {
+  if (val) {
+    canvasEditor.rulerEnable();
+  } else {
+    canvasEditor.rulerDisable();
+  }
+};
+
+// 隐藏工具条
+const hideToolsBar = () => {
+  state.menuActive = 100;
+  state.toolsBarShow = false;
+};
+// 展示工具条
+const showToolsBar = (val) => {
+  state.menuActive = val;
+  state.toolsBarShow = true;
+};
+// 属性面板开关
+const switchAttrBar = () => {
+  state.attrBarShow = !state.attrBarShow;
+};
+
 provide('fabric', fabric);
 provide('event', event);
-provide('canvas', canvas);
+provide('canvasEditor', canvasEditor);
 </script>
 <style lang="less" scoped>
 .logo {
@@ -213,6 +279,54 @@ provide('canvas', canvas);
   vertical-align: middle;
   .ivu-icon {
     vertical-align: super;
+  }
+}
+// 左侧容器
+.left-bar {
+  width: 65px;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  position: relative;
+
+  &.show-tools-bar {
+    width: 380px;
+  }
+}
+// 右侧容器
+.right-bar {
+  width: 304px; height: 100%; padding: 10px; overflow-y: auto; background: #fff
+  // width: 240px;
+  // height: 100%;
+  // padding: 10px;
+  // overflow-y: auto;
+  // background: #fff;
+}
+
+// 关闭按钮
+.close-btn {
+  width: 20px;
+  height: 64px;
+  cursor: pointer;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAACACAMAAABOb9vcAAAAhFBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAADHx8cODg50dHTx8fF2dnZ1dXWWlpZHR0c4ODhQpkZ5AAAAIXRSTlMA9t+/upkRAnPq5NXDfDEsKQjMeGlRThkMsquljTwzIWhBHpjgAAABJElEQVRYw+3YyW7CQBCEYbxig8ELGJyQkJRJyPb+75dj3zy/lD7kMH3+ZEuzSFO1mlZwhjOE2uwhVHJYMygNVwilhz2EUvNaMigledUFoE1anKYAtA9nVRuANpviOQBt0t2ZQSnZ9QxK6Qih9LSGUHkJobYlhGp6CPW4hlAVhckLhMop1InCjEK1FBYU1hSqo/BI4YXCjMIthTWFijDCCB3g7fuO4O1t/rkvQXPz/LUIzX0oAM0tQHOfCkBzC9DcuwLQXACao9Dv1yb9lsek2xaaxMcMH1x6Ff79dY0wwgj/DGv3p2tG4cX9wd55h4rCO/hk3uEs9w6QlXPIbXrfIJ6XrmVBOtJCA1YkXqVLkh1aUgyNk1fV1BxLxzpsuNLKzrME/AWr0ywwvyj83AAAAABJRU5ErkJggg==);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 50%;
+  position: absolute;
+  right: -20px;
+  z-index: 1;
+  top: 50%;
+  margin-top: -10px;
+
+  &.right-btn {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAACACAYAAAB5sSvuAAAAAXNSR0IArs4c6QAAAFBlWElmTU0AKgAAAAgAAgESAAMAAAABAAEAAIdpAAQAAAABAAAAJgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAgAAAAAAobJzlAAABWWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgoZXuEHAAADf0lEQVR4Ae2cvYsTQRjGE7FQkICFB1pZRyzEJkUKmzOpBEHwX9DCQkmChf4JahewsLpWFOQUzwMRPEgEy0PLpPADvEISDrVyfZ6cK0tIZrI7u7MPMi+8mb35uPnlmXczyeXmrURRdKyibAB8Dz8pywg42if4OUnIGd7Bww8Ut+GHpEATgPEll/y8DGRMtaB8hrryl30B2HzVW1Rcgx8vQ9UqaVac+Cf67cC34C+q1erHFcc5dUsDOD/RGBWv4M/hrwG8jzJ3cwFMwlDdd/BN+BZgd5ONLtd5Ac4zfEYFld0ALMMisxUFmAQa44dHdMB+TTasdM2bxJNxI7gDP7ISWNzJE1xymhF+uBzPbyvL2NZOA+oJIO/BrfP7iEGTSNtovIrY/L6sU9mA5PoAby6DtEq87JnlWF/H7+K+v/DmUQDkc23CNxbFpAogIa/Ab/IiaQoxmOThlnkG8TiKK5UUJNNR+MMYjqUaIJnWEYuXeEFTBCTXv1hUi0HCxXYWsbirqiAhb/BBWcE9KLimDEgB68pLTMAL6oBNdcBT6oBr6oAn1O9i2a2Od/DM1Jc4KBivVOYyLHFm6f4ODAoGBV0VcB0fYjAo6KqA6/gQg0FBVwVcx4cYDAq6KuA6/v+Mwel0Wmm325XhcOgqkH08/h6cyiaTSdRoNPhvBFGtVosGg0Gq8Wk7V9IO6Pf7MzgC+oBMDcgn1Ov1vEFmAvQJmRmQkN1ut3AlnQB9QDoDErLT6RSmZC6ARULmBlgUpPxWl5uCRcVhLoBFwTFsnAGLfi10AiwazklBX/txJgV9wWVSUP7tlvwbVspOyFarVfi7ac4Vvquzfyoy95DfiwOgeQHtrUFBu0bmHkFBsz721qCgXSNzj6CgWR97a1DQrpG5R1DQrI+9NSho18jcIyho1sfauqeuoDzgN3UFv6gD7qh/cK8rA84OGygv8VO+CCkrKH3g5Q1P41BB1SV+QDia4hJvQ72LB3h6gPIH/+5CvVGsntoSPwYQzxr/VgRkJoF1wP1KwvFa4SaRPgDNI+RLT2dTwTJfB+9j/jaWden5dgIe5oNnG2O+WwCb7bXWuflliSfLlAjCh4JULHMqjaIAc0tGkhdgnM6FyXI2EV+5pXNxAeTSMSHOSzg3+H2UuVsaQKq0A/eaUmiVb9yZlOk6vJSkTCZA2bRWsonBpFOrySan+wNoJmOM0LyBGwAAAABJRU5ErkJggg==);
+    transform: rotateY(180deg);
+    right: 0px;
+  }
+
+  &.right-btn-open {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAACACAMAAABOb9vcAAAAhFBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAADHx8cODg50dHTx8fF2dnZ1dXWWlpZHR0c4ODhQpkZ5AAAAIXRSTlMA9t+/upkRAnPq5NXDfDEsKQjMeGlRThkMsquljTwzIWhBHpjgAAABJElEQVRYw+3YyW7CQBCEYbxig8ELGJyQkJRJyPb+75dj3zy/lD7kMH3+ZEuzSFO1mlZwhjOE2uwhVHJYMygNVwilhz2EUvNaMigledUFoE1anKYAtA9nVRuANpviOQBt0t2ZQSnZ9QxK6Qih9LSGUHkJobYlhGp6CPW4hlAVhckLhMop1InCjEK1FBYU1hSqo/BI4YXCjMIthTWFijDCCB3g7fuO4O1t/rkvQXPz/LUIzX0oAM0tQHOfCkBzC9DcuwLQXACao9Dv1yb9lsek2xaaxMcMH1x6Ff79dY0wwgj/DGv3p2tG4cX9wd55h4rCO/hk3uEs9w6QlXPIbXrfIJ6XrmVBOtJCA1YkXqVLkh1aUgyNk1fV1BxLxzpsuNLKzrME/AWr0ywwvyj83AAAAABJRU5ErkJggg==);
+    right: 304px;
   }
 }
 
@@ -282,6 +396,8 @@ provide('canvas', canvas);
 }
 
 #workspace {
+  flex: 1;
+  width: 100%; position: relative; background: #f1f1f1;
   overflow: hidden;
 }
 

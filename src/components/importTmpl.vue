@@ -2,7 +2,7 @@
  * @Author: 秦少卫
  * @Date: 2022-09-03 19:16:55
  * @LastEditors: 秦少卫
- * @LastEditTime: 2023-04-27 23:07:22
+ * @LastEditTime: 2023-07-29 21:49:18
  * @Description: 导入模板
 -->
 
@@ -19,7 +19,7 @@
         class="tmpl-img"
         :alt="item.label"
         v-lazy="item.src"
-        @click="getTempData(item.tempUrl)"
+        @click="beforeClearTip(item.tempUrl)"
       />
     </Tooltip>
   </div>
@@ -27,14 +27,14 @@
 
 <script setup name="ImportTmpl">
 import useSelect from '@/hooks/select';
-import { downFontByJSON } from '@/utils/utils';
+// import { downFontByJSON } from '@/utils/utils';
 import axios from 'axios';
-import { Spin, Message } from 'view-ui-plus';
+import { Spin, Modal } from 'view-ui-plus';
 import { useI18n } from 'vue-i18n';
 
 const repoSrc = import.meta.env.APP_REPO;
 const { t } = useI18n();
-const { canvas } = useSelect();
+const { canvasEditor } = useSelect();
 const state = reactive({
   jsonFile: null,
   list: [
@@ -58,30 +58,33 @@ const state = reactive({
 
 // 插入文件
 const insertSvgFile = () => {
-  Spin.show({
-    render: (h) => h('div', t('alert.loading_fonts')),
-  });
+  // state.jsonFile
+  // console.log(state.jsonFile);
+  canvasEditor.insertSvgFile(state.jsonFile);
+  // Spin.show({
+  //   render: (h) => h('div', t('alert.loading_fonts')),
+  // });
 
-  downFontByJSON(state.jsonFile)
-    .then(() => {
-      Spin.hide();
-      canvas.c.loadFromJSON(state.jsonFile, () => {
-        canvas.c.renderAll.bind(canvas.c);
-        setTimeout(() => {
-          const workspace = canvas.c.getObjects().find((item) => item.id === 'workspace');
-          workspace.set('selectable', false);
-          workspace.set('hasControls', false);
-          canvas.c.requestRenderAll();
-          canvas.editor.editorWorkspace.setSize(workspace.width, workspace.height);
-          canvas.c.renderAll();
-          canvas.c.requestRenderAll();
-        }, 100);
-      });
-    })
-    .catch(() => {
-      Spin.hide();
-      Message.error(t('alert.loading_fonts_failed'));
-    });
+  // downFontByJSON(state.jsonFile)
+  //   .then(() => {
+  //     Spin.hide();
+  //     canvas.c.loadFromJSON(state.jsonFile, () => {
+  //       canvas.c.renderAll.bind(canvas.c);
+  //       setTimeout(() => {
+  //         const workspace = canvas.c.getObjects().find((item) => item.id === 'workspace');
+  //         workspace.set('selectable', false);
+  //         workspace.set('hasControls', false);
+  //         canvas.c.requestRenderAll();
+  //         canvas.editor.editorWorkspace.setSize(workspace.width, workspace.height);
+  //         canvas.c.renderAll();
+  //         canvas.c.requestRenderAll();
+  //       }, 100);
+  //     });
+  //   })
+  //   .catch(() => {
+  //     Spin.hide();
+  //     Message.error(t('alert.loading_fonts_failed'));
+  //   });
 };
 
 // 获取模板列表数据
@@ -102,6 +105,16 @@ const getTempList = () => {
     .catch(Spin.hide);
 };
 
+const beforeClearTip = (tmplUrl) => {
+  Modal.confirm({
+    title: t('tip'),
+    content: `<p>${t('replaceTip')}</p>`,
+    okText: t('ok'),
+    cancelText: t('cancel'),
+    onOk: () => getTempData(tmplUrl),
+  });
+};
+
 // 获取模板数据
 const getTempData = (tmplUrl) => {
   Spin.show({
@@ -110,6 +123,7 @@ const getTempData = (tmplUrl) => {
   const getTemp = axios.get(tmplUrl);
   getTemp.then((res) => {
     state.jsonFile = JSON.stringify(res.data);
+    Spin.hide();
     insertSvgFile();
   });
 };
@@ -119,7 +133,7 @@ getTempList();
 
 <style scoped lang="less">
 .tmpl-img {
-  width: 94px;
+  width: 140px;
   cursor: pointer;
   margin-right: 5px;
 }
